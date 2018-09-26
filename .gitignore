@@ -1,3 +1,6 @@
 /.idea/
 /.gradle/
 /gradle/wrapper/dists/
+/client/build/
+/client/gradle/
+/client/out/

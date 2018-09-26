@@ -1,0 +1,23 @@
+plugins {
+    id 'java'
+}
+
+group 'org.modbus'
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    // https://mvnrepository.com/artifact/com.google.code.findbugs/jsr305
+    compile group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
+
+    // https://mvnrepository.com/artifact/org.codehaus.mojo/animal-sniffer-annotations
+    compile group: 'org.codehaus.mojo', name: 'animal-sniffer-annotations', version: '1.17'
+
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
