@@ -1,6 +1,6 @@
 package org.modbus.client.pojo;
 
-import org.modbus.server.Part;
+import org.modbus.annotation.Part;
 
 /**
  * @author zhangzhenli

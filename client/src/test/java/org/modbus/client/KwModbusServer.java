@@ -6,8 +6,8 @@ import org.modbus.client.pojo.KwStatus;
 import org.modbus.client.pojo.Medicine;
 import org.modbus.client.pojo.MedicineWeight;
 import org.modbus.client.pojo.Prescription;
-import org.modbus.server.READ;
-import org.modbus.server.WRITE;
+import org.modbus.annotation.READ;
+import org.modbus.annotation.WRITE;
 
 /**
  * @author zhangzhenli
