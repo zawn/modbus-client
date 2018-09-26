@@ -2,12 +2,13 @@ package org.modbus.client;
 
 import java.util.List;
 
+import org.modbus.Call;
+import org.modbus.annotation.READ;
+import org.modbus.annotation.WRITE;
 import org.modbus.client.pojo.KwStatus;
 import org.modbus.client.pojo.Medicine;
 import org.modbus.client.pojo.MedicineWeight;
 import org.modbus.client.pojo.Prescription;
-import org.modbus.annotation.READ;
-import org.modbus.annotation.WRITE;
 
 /**
  * @author zhangzhenli
@@ -15,20 +16,20 @@ import org.modbus.annotation.WRITE;
 public interface KwModbusServer {
 
     @READ(start = 1000, end = 2200)
-    List<Medicine> getMedicineList();
+    Call<List<Medicine>> getMedicineList();
 
     @READ(start = 3001, end = 3250)
-    List<Medicine> getMedicineStatusList();
+    Call<List<Medicine>> getMedicineStatusList();
 
     @WRITE(start = 2300, end = 2545)
-    void putMedicineList(List<Medicine> list);
+    Call<Void> putMedicineList(List<Medicine> list);
 
     @WRITE(start = 2300, end = 2545)
-    void putMedicineWeight(List<MedicineWeight> list);
+    Call<Void> putMedicineWeight(List<MedicineWeight> list);
 
     @WRITE(start = 2700, quantity = 12)
-    void putPrescription(Prescription list);
+    Call<Void> putPrescription(Prescription list);
 
     @READ(start = 2720, quantity = 4)
-    List<KwStatus> getKwStatus();
+    Call<List<KwStatus>> getKwStatus();
 }

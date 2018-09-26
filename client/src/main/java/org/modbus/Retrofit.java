@@ -41,7 +41,7 @@ import static org.modbus.Utils.checkNotNull;
  * <pre><code>
  * Retrofit retrofit = new Retrofit.Builder()
  *     .baseUrl("https://api.example.com/")
- *     .addConverterFactory(GsonConverterFactory.create())
+ *     .addConverterFactory(ModbusConverterFactory.create())
  *     .build();
  *
  * MyApi api = retrofit.create(MyApi.class);
@@ -54,14 +54,14 @@ import static org.modbus.Utils.checkNotNull;
 public final class Retrofit {
   private final Map<Method, ServiceMethod<?>> serviceMethodCache = new ConcurrentHashMap<>();
 
-  final URL baseUrl;
+  final String baseUrl;
   final List<Converter.Factory> converterFactories;
   final List<CallAdapter.Factory> callAdapterFactories;
   final @Nullable Executor callbackExecutor;
   final boolean validateEagerly;
   final ServiceParser serviceParser;
 
-  Retrofit(ServiceParser serviceParser, URL baseUrl,
+  Retrofit(ServiceParser serviceParser, String baseUrl,
            List<Converter.Factory> converterFactories, List<CallAdapter.Factory> callAdapterFactories,
            @Nullable Executor callbackExecutor, boolean validateEagerly) {
     this.serviceParser = serviceParser;
@@ -167,7 +167,7 @@ public final class Retrofit {
   }
 
   /** The API base URL. */
-  public URL baseUrl() {
+  public String baseUrl() {
     return baseUrl;
   }
 
@@ -378,7 +378,7 @@ public final class Retrofit {
   public static final class Builder {
     private final Platform platform;
     private ServiceParser serviceParser;
-    private URL baseUrl;
+    private String baseUrl;
     private final List<Converter.Factory> converterFactories = new ArrayList<>();
     private final List<CallAdapter.Factory> callAdapterFactories = new ArrayList<>();
     private @Nullable Executor callbackExecutor;
@@ -414,12 +414,8 @@ public final class Retrofit {
     }
 
 
-    public Builder baseUrl(URL baseUrl) {
+    public Builder baseUrl(String baseUrl) {
       checkNotNull(baseUrl, "baseUrl == null");
-      String path = baseUrl.getPath();
-      if (!"/".equals(path)) {
-        throw new IllegalArgumentException("baseUrl must end in /: " + baseUrl);
-      }
       this.baseUrl = baseUrl;
       return this;
     }
