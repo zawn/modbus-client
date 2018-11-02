@@ -10,6 +10,6 @@ import java.lang.annotation.Target;
  */
 @Target({ElementType.FIELD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Quantity {
-    int value() default 1;
+public @interface CharsetName {
+    String value() default "UTF-16LE";
 }
