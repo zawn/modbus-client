@@ -38,14 +38,9 @@ public class ModbusClient {
     private static final Logger logger = LoggerFactory.getLogger(ModbusClient.class);
 
     /**
-     * 药材名占用寄存器个数
-     */
-    private static final int MedicineNameRegisters = 5;
-
-    /**
      * 一次读写的最大数量
      */
-    private static final int MaxRegisterCount = MedicineNameRegisters * 20;
+    private static final int MaxRegisterCount = 5 * 20;
     private static final byte[] ZEROS = new byte[MaxRegisterCount];
 
     ModbusTcpMaster master;
@@ -54,7 +49,8 @@ public class ModbusClient {
         this.master = master;
     }
 
-    public void write(int address, int quantity, ByteBuf byteBuf, int unitId) throws ExecutionException, InterruptedException {
+    public void write(int address, int quantity, ByteBuf byteBuf,
+                      int unitId) throws ExecutionException, InterruptedException {
         byte[] dest = new byte[byteBuf.readableBytes()];
         byteBuf.getBytes(0, dest);
         write(address, quantity, dest, unitId);
@@ -100,7 +96,8 @@ public class ModbusClient {
             throws ExecutionException, InterruptedException {
         logger.debug("internalModbusTcpWrite() called with: address = [" + address + "], bytes = [" + bytes + "], unitId = [" + unitId + "]");
         CompletableFuture<WriteMultipleRegistersResponse> future =
-                master.sendRequest(new WriteMultipleRegistersRequest(address, bytes.readableBytes() / 2, bytes), unitId);
+                master.sendRequest(new WriteMultipleRegistersRequest(address, bytes.readableBytes() / 2, bytes),
+                        unitId);
         WriteMultipleRegistersResponse response = future.get();
         int distQuantity = response.getQuantity();
         System.out.println("Write Response: " + distQuantity);
