@@ -4,6 +4,10 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 
+import org.modbus.io.ModbusClient;
+
+import io.netty.buffer.ByteBuf;
+
 import static org.modbus.Utils.methodError;
 
 /**
@@ -12,7 +16,10 @@ import static org.modbus.Utils.methodError;
 public class ModbusServiceParser extends ServiceParser {
 
 
-    public ModbusServiceParser() {
+    private ModbusClient callFactory;
+
+    public ModbusServiceParser(ModbusClient callFactory) {
+        this.callFactory = callFactory;
     }
 
     @Override
@@ -41,10 +48,12 @@ public class ModbusServiceParser extends ServiceParser {
             throw methodError(method, "HEAD method must use Void as response type.");
         }
 
-        Converter<Response, Object> responseConverter =
+
+
+        Converter<ByteBuf, Object> responseConverter =
                 createResponseConverter(retrofit, method, responseType);
 
-        return new ModbusServiceMethod<>(requestFactory,callAdapter, responseConverter);
+        return new ModbusServiceMethod<>(requestFactory,callFactory,callAdapter, responseConverter);
     }
 
     private static <ResponseT, ReturnT> CallAdapter<ResponseT, ReturnT> createCallAdapter(
@@ -59,7 +68,7 @@ public class ModbusServiceParser extends ServiceParser {
         }
     }
 
-    private static <ResponseT> Converter<Response, ResponseT> createResponseConverter(
+    private static <ResponseT> Converter<ByteBuf, ResponseT> createResponseConverter(
             Retrofit retrofit, Method method, Type responseType) {
         Annotation[] annotations = method.getAnnotations();
         try {
@@ -67,5 +76,9 @@ public class ModbusServiceParser extends ServiceParser {
         } catch (RuntimeException e) { // Wide exception range because factories are user code.
             throw methodError(method, e, "Unable to create converter for %s", responseType);
         }
+    }
+
+    public ModbusClient getCallFactory() {
+        return callFactory;
     }
 }

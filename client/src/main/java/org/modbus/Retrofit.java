@@ -15,12 +15,15 @@
  */
 package org.modbus;
 
+import io.netty.buffer.ByteBuf;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.lang.reflect.Type;
 import java.net.URL;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -241,8 +244,8 @@ public final class Retrofit {
    *
    * @throws IllegalArgumentException if no converter available for {@code type}.
    */
-  public <T> Converter<T, Request> requestBodyConverter(Type type,
-      Annotation[] parameterAnnotations, Annotation[] methodAnnotations) {
+  public <T> Converter<T, ByteBuf> requestBodyConverter(Type type,
+                                                        Annotation[] parameterAnnotations, Annotation[] methodAnnotations) {
     return nextRequestBodyConverter(null, type, parameterAnnotations, methodAnnotations);
   }
 
@@ -252,7 +255,7 @@ public final class Retrofit {
    *
    * @throws IllegalArgumentException if no converter available for {@code type}.
    */
-  public <T> Converter<T, Request> nextRequestBodyConverter(
+  public <T> Converter<T, ByteBuf> nextRequestBodyConverter(
       @Nullable Converter.Factory skipPast, Type type, Annotation[] parameterAnnotations,
       Annotation[] methodAnnotations) {
     checkNotNull(type, "type == null");
@@ -262,11 +265,11 @@ public final class Retrofit {
     int start = converterFactories.indexOf(skipPast) + 1;
     for (int i = start, count = converterFactories.size(); i < count; i++) {
       Converter.Factory factory = converterFactories.get(i);
-      Converter<?, Request> converter =
+      Converter<?, ByteBuf> converter =
           factory.requestBodyConverter(type, parameterAnnotations, methodAnnotations, this);
       if (converter != null) {
         //noinspection unchecked
-        return (Converter<T, Request>) converter;
+        return (Converter<T, ByteBuf>) converter;
       }
     }
 
@@ -293,7 +296,7 @@ public final class Retrofit {
    *
    * @throws IllegalArgumentException if no converter available for {@code type}.
    */
-  public <T> Converter<Response, T> responseBodyConverter(Type type, Annotation[] annotations) {
+  public <T> Converter<ByteBuf, T> responseBodyConverter(Type type, Annotation[] annotations) {
     return nextResponseBodyConverter(null, type, annotations);
   }
 
@@ -303,18 +306,18 @@ public final class Retrofit {
    *
    * @throws IllegalArgumentException if no converter available for {@code type}.
    */
-  public <T> Converter<Response, T> nextResponseBodyConverter(
+  public <T> Converter<ByteBuf, T> nextResponseBodyConverter(
       @Nullable Converter.Factory skipPast, Type type, Annotation[] annotations) {
     checkNotNull(type, "type == null");
     checkNotNull(annotations, "annotations == null");
 
     int start = converterFactories.indexOf(skipPast) + 1;
     for (int i = start, count = converterFactories.size(); i < count; i++) {
-      Converter<Response, ?> converter =
+      Converter<ByteBuf, ?> converter =
           converterFactories.get(i).responseBodyConverter(type, annotations, this);
       if (converter != null) {
         //noinspection unchecked
-        return (Converter<Response, T>) converter;
+        return (Converter<ByteBuf, T>) converter;
       }
     }
 
@@ -333,28 +336,6 @@ public final class Retrofit {
       builder.append("\n   * ").append(converterFactories.get(i).getClass().getName());
     }
     throw new IllegalArgumentException(builder.toString());
-  }
-
-  /**
-   * Returns a {@link Converter} for {@code type} to {@link String} from the available
-   * {@linkplain #converterFactories() factories}.
-   */
-  public <T> Converter<T, String> stringConverter(Type type, Annotation[] annotations) {
-    checkNotNull(type, "type == null");
-    checkNotNull(annotations, "annotations == null");
-
-    for (int i = 0, count = converterFactories.size(); i < count; i++) {
-      Converter<?, String> converter =
-          converterFactories.get(i).stringConverter(type, annotations, this);
-      if (converter != null) {
-        //noinspection unchecked
-        return (Converter<T, String>) converter;
-      }
-    }
-
-    // Nothing matched. Resort to default converter which just calls toString().
-    //noinspection unchecked
-    return (Converter<T, String>) BuiltInConverters.ToStringConverter.INSTANCE;
   }
 
   /**
@@ -490,7 +471,7 @@ public final class Retrofit {
 
       // Add the built-in converter factory first. This prevents overriding its behavior but also
       // ensures correct behavior when using converters that consume all types.
-      converterFactories.add(new BuiltInConverters());
+//      converterFactories.add(new BuiltInConverters());
       converterFactories.addAll(this.converterFactories);
 
       return new Retrofit(serviceParser, baseUrl, unmodifiableList(converterFactories),

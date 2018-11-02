@@ -103,7 +103,7 @@ final class ExecutorCallAdapterFactory extends CallAdapter.Factory {
       return new ExecutorCallbackCall<>(callbackExecutor, delegate.clone());
     }
 
-    @Override public Request request() {
+    @Override public byte[] request() {
       return delegate.request();
     }
   }

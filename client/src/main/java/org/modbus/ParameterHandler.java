@@ -15,37 +15,60 @@
  */
 package org.modbus;
 
+import io.netty.buffer.ByteBuf;
+
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.lang.reflect.Array;
-import javax.annotation.Nullable;
 
 
 public abstract class ParameterHandler<T> {
-  public abstract void apply(RequestBuilder builder, @Nullable T value) throws IOException;
+    public abstract void apply(ByteBuf builder, @Nullable T value) throws IOException;
 
-  public final ParameterHandler<Iterable<T>> iterable() {
-    return new ParameterHandler<Iterable<T>>() {
-      @Override public void apply(RequestBuilder builder, @Nullable Iterable<T> values)
-          throws IOException {
-        if (values == null) return; // Skip null values.
+    public final ParameterHandler<Iterable<T>> iterable() {
+        return new ParameterHandler<Iterable<T>>() {
+            @Override
+            public void apply(ByteBuf builder, @Nullable Iterable<T> values)
+                    throws IOException {
+                if (values == null) return; // Skip null values.
 
-        for (T value : values) {
-          ParameterHandler.this.apply(builder, value);
+                for (T value : values) {
+                    ParameterHandler.this.apply(builder, value);
+                }
+            }
+        };
+    }
+
+    public final ParameterHandler<Object> array() {
+        return new ParameterHandler<Object>() {
+            @Override
+            public void apply(ByteBuf builder, @Nullable Object values) throws IOException {
+                if (values == null) return; // Skip null values.
+
+                for (int i = 0, size = Array.getLength(values); i < size; i++) {
+                    //noinspection unchecked
+                    ParameterHandler.this.apply(builder, (T) Array.get(values, i));
+                }
+            }
+        };
+    }
+
+    static final class ParameterHandlerImpl<T> extends ParameterHandler<T> {
+        private final Converter<T, ByteBuf> valueConverter;
+
+        ParameterHandlerImpl(Converter<T, ByteBuf> valueConverter) {
+            this.valueConverter = valueConverter;
         }
-      }
-    };
-  }
 
-  public final ParameterHandler<Object> array() {
-    return new ParameterHandler<Object>() {
-      @Override public void apply(RequestBuilder builder, @Nullable Object values) throws IOException {
-        if (values == null) return; // Skip null values.
+        @Override
+        public void apply(ByteBuf builder, @Nullable T value) throws IOException {
+            if (value == null) return; // Skip null values.
 
-        for (int i = 0, size = Array.getLength(values); i < size; i++) {
-          //noinspection unchecked
-          ParameterHandler.this.apply(builder, (T) Array.get(values, i));
+            ByteBuf byteBuf = valueConverter.convert(value);
+            if (byteBuf == null) return; // Skip converted but null values
+
+            builder.ensureWritable(byteBuf.readableBytes());
+            builder.writeBytes(byteBuf);
         }
-      }
-    };
-  }
+    }
 }

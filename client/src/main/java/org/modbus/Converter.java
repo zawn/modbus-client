@@ -15,10 +15,13 @@
  */
 package org.modbus;
 
+import io.netty.buffer.ByteBuf;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.nio.ByteBuffer;
 import javax.annotation.Nullable;
 
 /**
@@ -37,8 +40,8 @@ public interface Converter<F, T> {
      * response types such as {@code SimpleResponse} from a {@code Call<SimpleResponse>}
      * declaration.
      */
-    public @Nullable Converter<Response, ?> responseBodyConverter(Type type,
-        Annotation[] annotations, Retrofit retrofit) {
+    public @Nullable Converter<ByteBuf, ?> responseBodyConverter(Type type,
+                                                                    Annotation[] annotations, Retrofit retrofit) {
       return null;
     }
 
@@ -48,20 +51,8 @@ public interface Converter<F, T> {
      * specified by {@link Body @Body}, {@link Part @Part}, and {@link PartMap @PartMap}
      * values.
      */
-    public @Nullable Converter<?, Request> requestBodyConverter(Type type,
-        Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
-      return null;
-    }
-
-    /**
-     * Returns a {@link Converter} for converting {@code type} to a {@link String}, or null if
-     * {@code type} cannot be handled by this factory. This is used to create converters for types
-     * specified by {@link Field @Field}, {@link FieldMap @FieldMap} values,
-     * {@link Header @Header}, {@link HeaderMap @HeaderMap}, {@link Path @Path},
-     * {@link Query @Query}, and {@link QueryMap @QueryMap} values.
-     */
-    public @Nullable Converter<?, String> stringConverter(Type type, Annotation[] annotations,
-        Retrofit retrofit) {
+    public @Nullable Converter<?, ByteBuf> requestBodyConverter(Type type,
+                                                                Annotation[] parameterAnnotations, Annotation[] methodAnnotations, Retrofit retrofit) {
       return null;
     }
 

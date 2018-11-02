@@ -15,6 +15,8 @@
  */
 package org.modbus;
 
+import io.netty.buffer.ByteBuf;
+
 import java.nio.ByteBuffer;
 
 import javax.annotation.Nullable;
@@ -24,11 +26,11 @@ import javax.annotation.Nullable;
  */
 public final class Response<T> {
 
-    private final ByteBuffer rawResponse;
+    private final ByteBuf rawResponse;
     private final @Nullable
     T body;
 
-    private Response(ByteBuffer rawResponse, @Nullable T body) {
+    public Response(ByteBuf rawResponse, @Nullable T body) {
         this.rawResponse = rawResponse;
         this.body = body;
     }
@@ -36,7 +38,7 @@ public final class Response<T> {
     /**
      * The raw response from the HTTP client.
      */
-    public ByteBuffer raw() {
+    public ByteBuf raw() {
         return rawResponse;
     }
 
