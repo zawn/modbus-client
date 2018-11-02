@@ -3,12 +3,23 @@ package org.modbus.client;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.junit.Assert;
 import org.junit.Test;
-import org.modbus.ModbusCommunication;
-import org.modbus.ModbusConverterFactory;
+import org.modbus.Call;
+import org.modbus.io.ModbusClient;
 import org.modbus.ModbusServiceParser;
+import org.modbus.Response;
 import org.modbus.Retrofit;
+import org.modbus.annotation.READ;
+import org.modbus.annotation.WRITE;
+import org.modbus.client.pojo.ModbusMedicine;
+import org.modbus.client.pojo.ModbusStatus;
+import org.modbus.client.pojo.ModbusWeight;
+import org.modbus.client.pojo.PrescriptionProfile;
+import org.modbus.converter.ModbusConverterFactory;
 
 import com.digitalpetri.modbus.master.ModbusTcpMaster;
 import com.digitalpetri.modbus.master.ModbusTcpMasterConfig;
@@ -46,6 +57,64 @@ public class ModbusTest {
         System.out.println("ddd");
     }
 
+    /**
+     * @author zhangzhenli
+     */
+    public interface ModbusRobotService {
+
+        /**
+         * 读取药品名称.
+         *
+         * @return
+         */
+        @READ(start = 2300, quantity = 250)
+        Call<List<ModbusMedicine>> getMedicineList();
+
+        /**
+         * 写入药方名称信息.
+         *
+         * @param list
+         * @return
+         */
+        @WRITE(start = 2300, end = 2549)
+        Call<Void> putMedicineList(List<ModbusMedicine> list);
+
+        /**
+         * 写入药方重量信息.
+         *
+         * @param list
+         * @return
+         */
+        @WRITE(start = 2601, end = 2650)
+        Call<Void> putMedicineWeight(List<ModbusWeight> list);
+
+        /**
+         * 写入药方属性信息.
+         *
+         * @param profile
+         * @return
+         */
+        @WRITE(start = 2700, quantity = 12)
+        Call<Void> putPrescription(PrescriptionProfile profile);
+
+        /**
+         * 读取组态状态.
+         *
+         * @return
+         */
+        @READ(start = 2720, quantity = 4)
+        Call<ModbusStatus> getKwStatus();
+
+        /**
+         * 读取缺料信息
+         *
+         * @return
+         */
+        @READ(start = 3001, end = 3250)
+        Call<List<ModbusStatus>> getMedicineStatusList();
+    }
+
+
     @Test
     public void test() throws IOException {
         String baseUrl = "192.168.10.138";
@@ -55,13 +124,27 @@ public class ModbusTest {
                 .build();
         ModbusTcpMaster modbusTcpMaster = new ModbusTcpMaster(config);
         Retrofit modbus = new Retrofit.Builder(
-                new ModbusServiceParser(new ModbusCommunication(modbusTcpMaster)))
+                new ModbusServiceParser(new ModbusClient(modbusTcpMaster)))
                 .baseUrl(baseUrl)
                 .addConverterFactory(new ModbusConverterFactory())
                 .build();
-//        KwModbusServer kwModbusServers = modbus.create(KwModbusServer.class);
-//        Call<List<Medicine>> call = kwModbusServers.getMedicineList();
-//        Response<List<Medicine>> execute = call.execute();
-//        List<Medicine> body = execute.body();
+        ModbusRobotService kwModbusServers = modbus.create(ModbusRobotService.class);
+
+        List<ModbusMedicine> list = new ArrayList<>();
+        list.add(new ModbusMedicine("大黄"));
+        list.add(new ModbusMedicine("枇杷叶"));
+        list.add(new ModbusMedicine("三七"));
+        list.add(new ModbusMedicine("西瓜"));
+        list.add(new ModbusMedicine("鸡血藤"));
+
+        Call<Void> voidCall = kwModbusServers.putMedicineList(list);
+        Response<Void> execute1 = voidCall.execute();
+
+        Call<List<ModbusMedicine>> call = kwModbusServers.getMedicineList();
+        Response<List<ModbusMedicine>> execute = call.execute();
+        List<ModbusMedicine> body = execute.body();
+
+        System.out.println(body);
+        Assert.assertEquals(body, list);
     }
 }

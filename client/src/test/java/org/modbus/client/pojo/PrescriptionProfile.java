@@ -1,6 +1,6 @@
 package org.modbus.client.pojo;
 
-import org.modbus.annotation.ByteCharset;
+import org.modbus.annotation.CharsetName;
 import org.modbus.annotation.Quantity;
 
 /**
@@ -13,7 +13,7 @@ public class PrescriptionProfile {
     long serialNumber;
     //姓名
     @Quantity(5)
-    @ByteCharset("GB2312")
+    @CharsetName("GB2312")
     String patient;
     //帖数
     int count;

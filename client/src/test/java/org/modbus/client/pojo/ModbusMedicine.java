@@ -1,6 +1,8 @@
 package org.modbus.client.pojo;
 
-import org.modbus.annotation.ByteCharset;
+import java.util.StringJoiner;
+
+import org.modbus.annotation.CharsetName;
 import org.modbus.annotation.Quantity;
 
 /**
@@ -8,9 +10,16 @@ import org.modbus.annotation.Quantity;
  */
 public class ModbusMedicine {
 
-    @Quantity(5)
-    @ByteCharset("GB18030")
+    @Quantity(10)
+    @CharsetName("GB18030")
     String name;
+
+    public ModbusMedicine() {
+    }
+
+    public ModbusMedicine(String name) {
+        this.name = name;
+    }
 
     public String getName() {
         return name;
@@ -18,5 +27,27 @@ public class ModbusMedicine {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ModbusMedicine)) return false;
+
+        ModbusMedicine that = (ModbusMedicine) o;
+
+        return name != null ? name.equals(that.name) : that.name == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return name != null ? name.hashCode() : 0;
+    }
+
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", ModbusMedicine.class.getSimpleName() + "[", "]")
+                .add("name='" + name + "'")
+                .toString();
     }
 }

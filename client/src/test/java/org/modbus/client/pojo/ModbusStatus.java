@@ -7,13 +7,17 @@ import org.modbus.annotation.Quantity;
  */
 public class ModbusStatus {
     @Quantity(1)
-    int robotReady;
+    int robotReady;         // 设备状态
+
     @Quantity(1)
-    int prescriptionSend;
+    int prescriptionSend;   // 服务器药方发送标志
+
     @Quantity(1)
-    int medicineChange;
+    int medicineChange;     // 药名信息更新
+
     @Quantity(1)
-    int medicineLack;
+    int medicineLack;       // 缺料提示
+
 
     public int getRobotReady() {
         return robotReady;

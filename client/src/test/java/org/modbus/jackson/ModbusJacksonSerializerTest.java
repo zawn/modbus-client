@@ -1,25 +1,26 @@
 package org.modbus.jackson;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Test;
-import org.modbus.util.HexDump;
 import org.modbus.client.pojo.ModbusMedicine;
+import org.modbus.util.HexDump;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JavaType;
 import com.google.common.primitives.Ints;
 
 /**
  * @author zhangzhenli
  */
-public class ModbusSerializerTest {
+public class ModbusJacksonSerializerTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(ModbusSerializerTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(ModbusJacksonSerializerTest.class);
 
     @Test
     public void testByteConvert() {
@@ -48,7 +49,7 @@ public class ModbusSerializerTest {
 
 
     @Test
-    public void serialize() throws JsonProcessingException {
+    public void serialize() throws IOException {
         ModbusMapper modbusMapper = new ModbusMapper();
         List<ModbusMedicine> list = new ArrayList<>();
         list.add(new ModbusMedicine("大黄"));
@@ -58,7 +59,16 @@ public class ModbusSerializerTest {
         list.add(new ModbusMedicine("鸡血藤"));
         byte[] bytes = modbusMapper.writeValueAsBytes(list);
 
-
+        JavaType t = modbusMapper.getTypeFactory().constructParametricType(List.class,
+                ModbusMedicine.class);
         System.out.println(HexDump.dumpHexString(bytes));
+
+        JavaType valueType = t;
+//        ModbusParser modbusParser = modbusMapper.getFactory().createParser(bytes, valueType);
+//        Object readValue = modbusMapper.readerFor(valueType).readValue(modbusParser);
+//        modbusMapper.readerFor(valueType).readValue(bytes);
+        List<ModbusMedicine> o = modbusMapper.readValue(bytes, valueType);
+
+        System.out.println(o);
     }
 }
