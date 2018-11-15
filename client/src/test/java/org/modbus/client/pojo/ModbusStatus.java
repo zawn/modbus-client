@@ -50,4 +50,15 @@ public class ModbusStatus {
     public void setMedicineLack(int medicineLack) {
         this.medicineLack = medicineLack;
     }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("ModbusStatus{");
+        sb.append("robotReady=").append(robotReady);
+        sb.append(", prescriptionSend=").append(prescriptionSend);
+        sb.append(", medicineChange=").append(medicineChange);
+        sb.append(", medicineLack=").append(medicineLack);
+        sb.append('}');
+        return sb.toString();
+    }
 }

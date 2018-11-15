@@ -1,12 +1,5 @@
 package org.modbus.jackson;
 
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.nio.charset.Charset;
-
-import org.modbus.annotation.CharsetName;
-import org.modbus.annotation.Quantity;
-
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.core.util.VersionUtil;
 import com.fasterxml.jackson.databind.BeanProperty;
@@ -16,6 +9,12 @@ import com.fasterxml.jackson.databind.introspect.NopAnnotationIntrospector;
 import com.fasterxml.jackson.databind.ser.std.StdDelegatingSerializer;
 import com.fasterxml.jackson.databind.type.TypeFactory;
 import com.fasterxml.jackson.databind.util.Converter;
+import org.modbus.annotation.CharsetName;
+import org.modbus.annotation.Quantity;
+
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 
 /**
  * @author zhangzhenli
@@ -51,14 +50,14 @@ public class ModbusAnnotationIntrospector extends NopAnnotationIntrospector {
         }
 
         public FixLengthByteArrayConverter(int quantity, Charset charset) {
-            this.quantity = quantity;
+            this.quantity = quantity * 2;
             this.charset = charset;
             if (charset == null)
                 this.charset = DEFAULT_CHARSET;
         }
 
         public FixLengthByteArrayConverter(Quantity q, CharsetName charsetName) {
-            quantity = q.value();
+            quantity = q.value() * 2;
             if (charsetName != null) {
                 charset = Charset.forName(charsetName.value());
             } else {

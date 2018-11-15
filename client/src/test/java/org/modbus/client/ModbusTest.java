@@ -1,15 +1,13 @@
 package org.modbus.client;
 
-import java.io.IOException;
-import java.net.InetAddress;
-import java.time.Duration;
-import java.util.ArrayList;
-import java.util.List;
-
+import com.digitalpetri.modbus.master.ModbusTcpMaster;
+import com.digitalpetri.modbus.master.ModbusTcpMasterConfig;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import org.junit.Assert;
 import org.junit.Test;
 import org.modbus.Call;
-import org.modbus.io.ModbusClient;
 import org.modbus.ModbusServiceParser;
 import org.modbus.Response;
 import org.modbus.Retrofit;
@@ -20,12 +18,13 @@ import org.modbus.client.pojo.ModbusStatus;
 import org.modbus.client.pojo.ModbusWeight;
 import org.modbus.client.pojo.PrescriptionProfile;
 import org.modbus.converter.ModbusConverterFactory;
+import org.modbus.io.ModbusClient;
 
-import com.digitalpetri.modbus.master.ModbusTcpMaster;
-import com.digitalpetri.modbus.master.ModbusTcpMasterConfig;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
+import java.io.IOException;
+import java.net.InetAddress;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author zhangzhenli
@@ -117,7 +116,7 @@ public class ModbusTest {
 
     @Test
     public void test() throws IOException {
-        String baseUrl = "192.168.10.138";
+        String baseUrl = "192.168.10.200";
 
         ModbusTcpMasterConfig config = new ModbusTcpMasterConfig.Builder(baseUrl)
                 .setPort(502).setTimeout(Duration.ofSeconds(6))
@@ -143,6 +142,9 @@ public class ModbusTest {
         Call<List<ModbusMedicine>> call = kwModbusServers.getMedicineList();
         Response<List<ModbusMedicine>> execute = call.execute();
         List<ModbusMedicine> body = execute.body();
+
+        ModbusStatus modbusStatus = kwModbusServers.getKwStatus().execute().body();
+        System.out.println(modbusStatus);
 
         System.out.println(body);
         Assert.assertEquals(body, list);

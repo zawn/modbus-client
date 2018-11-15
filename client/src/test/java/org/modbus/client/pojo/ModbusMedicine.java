@@ -10,7 +10,7 @@ import org.modbus.annotation.Quantity;
  */
 public class ModbusMedicine {
 
-    @Quantity(10)
+    @Quantity(5)
     @CharsetName("GB18030")
     String name;
 

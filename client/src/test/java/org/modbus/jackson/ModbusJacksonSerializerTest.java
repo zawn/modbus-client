@@ -1,19 +1,18 @@
 package org.modbus.jackson;
 
-import java.io.IOException;
-import java.math.BigInteger;
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.List;
-
+import com.fasterxml.jackson.databind.JavaType;
 import org.junit.Test;
 import org.modbus.client.pojo.ModbusMedicine;
 import org.modbus.util.HexDump;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.fasterxml.jackson.databind.JavaType;
-import com.google.common.primitives.Ints;
+import java.io.IOException;
+import java.math.BigInteger;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author zhangzhenli
@@ -22,12 +21,33 @@ public class ModbusJacksonSerializerTest {
 
     private static final Logger logger = LoggerFactory.getLogger(ModbusJacksonSerializerTest.class);
 
+    public static int byteArrayToLeInt(byte[] b) {
+        final ByteBuffer bb = ByteBuffer.wrap(b);
+        bb.order(ByteOrder.LITTLE_ENDIAN);
+        return bb.getInt();
+    }
+
+    public static byte[] leIntToByteArray(int i) {
+        final ByteBuffer bb = ByteBuffer.allocate(Integer.SIZE / Byte.SIZE);
+        bb.order(ByteOrder.LITTLE_ENDIAN);
+        bb.putInt(i);
+        return bb.array();
+    }
     @Test
     public void testByteConvert() {
         logger.debug("testByteConvert() called");
 
         byte b = (byte) 0xFF;
+        byte[] bytes = {127,127};
+        logger.debug(HexDump.dumpHexString(bytes));
+        final ByteBuffer bb = ByteBuffer.wrap(bytes);
+        bb.order(ByteOrder.LITTLE_ENDIAN);
+        int anInt = bb.getShort();
+        logger.debug(anInt+"  ");
+        logger.debug(HexDump.dumpHexString(bb.array()));
+
         BigInteger bigInteger = BigInteger.valueOf(b);
+        logger.debug(bigInteger.toString());
         logger.debug(HexDump.dumpHexString(bigInteger.toByteArray()));
 
         boolean b1 = true;
@@ -41,10 +61,11 @@ public class ModbusJacksonSerializerTest {
         logger.debug(HexDump.dumpHexString(ByteBuffer.allocate(4).put(b).array()));
 //        logger.debug(HexDump.dumpHexString(ByteBuffer.allocate(4).put(b1).array()));
         System.out.println("-----");
-        logger.debug(HexDump.dumpHexString(Ints.toByteArray(32767)));
+//        logger.debug(HexDump.dumpHexString(Ints.toByteArray(32767)));
         logger.debug(HexDump.dumpHexString(ByteBuffer.allocate(4).putInt(32767).array()));
         ByteBuffer byteBuffer = ByteBuffer.allocate(2);
-        logger.debug(HexDump.dumpHexString(byteBuffer.putShort((short) 32767).array()));
+        ByteBuffer aShort = byteBuffer.putShort((short) 32767);
+        logger.debug(HexDump.dumpHexString(aShort.array()));
     }
 
 

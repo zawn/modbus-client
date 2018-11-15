@@ -14,6 +14,20 @@
 
 package org.modbus.jackson;
 
+import com.fasterxml.jackson.core.*;
+import com.fasterxml.jackson.core.base.ParserMinimalBase;
+import com.fasterxml.jackson.databind.DeserializationConfig;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.introspect.Annotated;
+import com.fasterxml.jackson.databind.introspect.AnnotatedClass;
+import com.fasterxml.jackson.databind.introspect.AnnotatedField;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
+import org.modbus.annotation.CharsetName;
+import org.modbus.annotation.Quantity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -21,25 +35,6 @@ import java.math.BigInteger;
 import java.nio.charset.Charset;
 import java.util.Iterator;
 import java.util.LinkedList;
-
-import org.modbus.annotation.CharsetName;
-import org.modbus.annotation.Quantity;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.fasterxml.jackson.core.Base64Variant;
-import com.fasterxml.jackson.core.JsonLocation;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonStreamContext;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.core.ObjectCodec;
-import com.fasterxml.jackson.core.Version;
-import com.fasterxml.jackson.core.base.ParserMinimalBase;
-import com.fasterxml.jackson.databind.DeserializationConfig;
-import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.introspect.Annotated;
-import com.fasterxml.jackson.databind.introspect.AnnotatedClass;
-import com.fasterxml.jackson.databind.introspect.AnnotatedField;
 
 import static org.modbus.jackson.ModbusAnnotationIntrospector.FixLengthByteArrayConverter.DEFAULT_CHARSET;
 
@@ -135,15 +130,17 @@ public class ModbusParser extends ParserMinimalBase {
             case START_OBJECT:
                 Iterable<AnnotatedField> fields = classInfo.fields();
                 for (AnnotatedField field : fields) {
-                    Quantity annotation = field.getAnnotation(Quantity.class);
-                    if (annotation != null) {
-                        map.add(new FieldCursor(JsonToken.FIELD_NAME, field, cursor + length,
-                                cursor + length + annotation.value()));
-                        int i = flatJavaType(map, field.getType(), cursor + length, annotation.value());
-                        if (i > annotation.value()) {
+                    int quantityLength = getQuantityLength(field);
+                    if (quantityLength != 0) {
+                        FieldCursor fieldCursor = new FieldCursor(JsonToken.FIELD_NAME, field,
+                                cursor + length,
+                                cursor + length + quantityLength);
+                        map.add(fieldCursor);
+                        int i = flatJavaType(map, field.getType(), cursor + length, quantityLength);
+                        if (i > quantityLength) {
                             throw new UnsupportedOperationException("Read array out of bounds");
                         }
-                        length += annotation.value();
+                        length += quantityLength;
                     }
                 }
                 map.add(new FieldCursor(JsonToken.END_OBJECT));
@@ -168,16 +165,21 @@ public class ModbusParser extends ParserMinimalBase {
             return JsonToken.START_ARRAY;
         } else if (javaType.isTypeOrSubTypeOf(CharSequence.class)) {
             return JsonToken.VALUE_STRING;
-        } else if (javaType.isTypeOrSubTypeOf(Number.class)) {
-            if (javaType.isTypeOrSubTypeOf(Byte.class)
-                    || javaType.isTypeOrSubTypeOf(Short.class)
-                    || javaType.isTypeOrSubTypeOf(Integer.class)
-                    || javaType.isTypeOrSubTypeOf(Long.class)) {
-                return JsonToken.VALUE_NUMBER_INT;
-            } else {
-                return JsonToken.VALUE_NUMBER_FLOAT;
-            }
-        } else if (javaType.isTypeOrSubTypeOf(Boolean.class)) {
+        } else if (javaType.isTypeOrSubTypeOf(Byte.class)
+                || javaType.isTypeOrSubTypeOf(byte.class)
+                || javaType.isTypeOrSubTypeOf(Short.class)
+                || javaType.isTypeOrSubTypeOf(short.class)
+                || javaType.isTypeOrSubTypeOf(Integer.class)
+                || javaType.isTypeOrSubTypeOf(int.class)
+                || javaType.isTypeOrSubTypeOf(Long.class)
+                || javaType.isTypeOrSubTypeOf(long.class)) {
+            return JsonToken.VALUE_NUMBER_INT;
+        } else if (javaType.isTypeOrSubTypeOf(Number.class)
+                || javaType.isTypeOrSubTypeOf(double.class)
+                || javaType.isTypeOrSubTypeOf(float.class)) {
+            return JsonToken.VALUE_NUMBER_FLOAT;
+        } else if (javaType.isTypeOrSubTypeOf(Boolean.class)
+                || javaType.isTypeOrSubTypeOf(boolean.class)) {
             // 无法在反射的时候确定 JsonToken.VALUE_FALSE或者 JsonToken.VALUE_TRUE使用JsonToken.VALUE_NUMBER_INT代替。
             return JsonToken.VALUE_NUMBER_INT;
         } else if (javaType.isTypeOrSubTypeOf(Object.class)) {
@@ -226,7 +228,7 @@ public class ModbusParser extends ParserMinimalBase {
     private int getQuantityLength(Annotated annotated) {
         Quantity quantity = annotated.getAnnotation(Quantity.class);
         if (quantity != null) {
-            return quantity.value();
+            return quantity.value() * 2;
         }
         return 0;
     }
@@ -318,7 +320,7 @@ public class ModbusParser extends ParserMinimalBase {
 
     @Override
     public Number getNumberValue() throws IOException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return getLongValue();
     }
 
     @Override
@@ -328,31 +330,69 @@ public class ModbusParser extends ParserMinimalBase {
 
     @Override
     public int getIntValue() throws IOException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return Math.toIntExact(getLongValue());
     }
 
     @Override
     public long getLongValue() throws IOException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        ByteBuf byteBuffer = getCurrentByteBuf();
+        int readableBytes = byteBuffer.readableBytes();
+        switch (readableBytes) {
+            case 8:
+                return byteBuffer.readLong();
+            case 4:
+                return byteBuffer.readInt();
+            case 2:
+                return byteBuffer.readShort();
+            case 1:
+                return byteBuffer.readByte();
+            default:
+                throw new UnsupportedOperationException("byte length " + readableBytes + "cannot be converted to a number type");
+        }
     }
 
     @Override
     public BigInteger getBigIntegerValue() throws IOException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        return BigInteger.valueOf(getLongValue());
     }
 
     @Override
     public float getFloatValue() throws IOException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        ByteBuf byteBuffer = getCurrentByteBuf();
+        int readableBytes = byteBuffer.readableBytes();
+        if (readableBytes != 4) {
+            throw new UnsupportedOperationException("byte length " + readableBytes + "cannot be converted to a number type");
+        }
+        return byteBuffer.readFloat();
     }
 
     @Override
     public double getDoubleValue() throws IOException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        ByteBuf byteBuffer = getCurrentByteBuf();
+        int readableBytes = byteBuffer.readableBytes();
+        if (readableBytes != 8) {
+            throw new UnsupportedOperationException("byte length " + readableBytes + "cannot be converted to a number type");
+        }
+        return byteBuffer.readDouble();
+    }
+
+    private ByteBuf getCurrentByteBuf() {
+        FieldCursor cursor = _currentFieldCursor;
+        int i1 = cursor.inputEnd - cursor.inputStr;
+        return Unpooled.wrappedBuffer(inputBuffer, cursor.inputStr, i1);
     }
 
     @Override
     public BigDecimal getDecimalValue() throws IOException {
-        throw new UnsupportedOperationException("Not supported yet.");
+        ByteBuf byteBuffer = getCurrentByteBuf();
+        int readableBytes = byteBuffer.readableBytes();
+        switch (readableBytes) {
+            case 8:
+                return BigDecimal.valueOf(byteBuffer.readDouble());
+            case 4:
+                return BigDecimal.valueOf(byteBuffer.readDouble());
+            default:
+                throw new UnsupportedOperationException("Not supported yet.");
+        }
     }
 }
