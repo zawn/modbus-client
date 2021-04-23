@@ -1,22 +1,10 @@
 package org.modbus.jackson;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.io.Writer;
-
-import com.fasterxml.jackson.core.JsonEncoding;
-import com.fasterxml.jackson.core.JsonFactory;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.ObjectCodec;
+import com.fasterxml.jackson.core.*;
 import com.fasterxml.jackson.core.io.IOContext;
 import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.dataformat.cbor.CBORParser;
+
+import java.io.*;
 
 /**
  * @author zhangzhenli
@@ -24,17 +12,8 @@ import com.fasterxml.jackson.dataformat.cbor.CBORParser;
 public class ModbusFactory extends JsonFactory {
 
 
-    /**
-     * Bitfield (set of flags) of all parser features that are enabled
-     * by default.
-     */
-    final static int DEFAULT_CBOR_PARSER_FEATURE_FLAGS = CBORParser.Feature.collectDefaults();
-
-    protected int _formatParserFeatures;
-
     public ModbusFactory(ObjectCodec oc) {
         super(oc);
-        _formatParserFeatures = DEFAULT_CBOR_PARSER_FEATURE_FLAGS;
     }
 
     public ModbusParser createParser(InputStream in,
@@ -56,7 +35,7 @@ public class ModbusFactory extends JsonFactory {
     protected ModbusParser _createParser(InputStream in, IOContext ctxt,
                                          JavaType javaType) throws IOException {
         return new ModbusParserBootstrapper(ctxt, in).constructParser(_factoryFeatures,
-                _parserFeatures, _formatParserFeatures,
+                _parserFeatures,
                 _objectCodec, _byteSymbolCanonicalizer, javaType);
     }
 
@@ -80,7 +59,7 @@ public class ModbusFactory extends JsonFactory {
     protected ModbusParser _createParser(byte[] data, int offset, int len,
                                          IOContext ctxt, JavaType javaType) throws IOException {
         return new ModbusParserBootstrapper(ctxt, data, offset, len).constructParser(
-                _factoryFeatures, _parserFeatures, _formatParserFeatures,
+                _factoryFeatures, _parserFeatures,
                 _objectCodec, _byteSymbolCanonicalizer, javaType);
     }
 

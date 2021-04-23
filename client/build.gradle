@@ -34,8 +34,8 @@ dependencies {
 
     compile libraries.slf4j
 
-    // https://mvnrepository.com/artifact/com.fasterxml.jackson.dataformat/jackson-dataformat-cbor
-    compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-cbor', version: '2.9.7'
+//    // https://mvnrepository.com/artifact/com.fasterxml.jackson.dataformat/jackson-dataformat-cbor
+//    compile group: 'com.fasterxml.jackson.dataformat', name: 'jackson-dataformat-cbor', version: '2.8.11.2'
 
     // https://mvnrepository.com/artifact/org.codehaus.mojo/animal-sniffer-annotations
     compile group: 'org.codehaus.mojo', name: 'animal-sniffer-annotations', version: '1.17'
@@ -46,7 +46,7 @@ dependencies {
     compile group: 'com.google.code.findbugs', name: 'jsr305', version: '3.0.2'
 
     // https://mvnrepository.com/artifact/com.fasterxml.jackson.core/jackson-databind
-    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.9.7'
+    compile group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.8.11.2'
 
 
 

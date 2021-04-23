@@ -5,7 +5,6 @@ import com.digitalpetri.modbus.master.ModbusTcpMasterConfig;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
-import org.junit.Assert;
 import org.junit.Test;
 import org.modbus.Call;
 import org.modbus.ModbusServiceParser;
@@ -94,7 +93,7 @@ public class ModbusTest {
          * @return
          */
         @WRITE(start = 2700, quantity = 12)
-        Call<Void> putPrescription(PrescriptionProfile profile);
+        Call<Void> putSendStatus(PrescriptionProfile profile);
 
         /**
          * 读取组态状态.
@@ -103,6 +102,15 @@ public class ModbusTest {
          */
         @READ(start = 2720, quantity = 4)
         Call<ModbusStatus> getKwStatus();
+
+        /**
+         * 写入药方属性信息.
+         *
+         * @param state
+         * @return
+         */
+        @WRITE(start = 2721, quantity = 1)
+        Call<Void> putSendStatus(short state);
 
         /**
          * 读取缺料信息
@@ -129,24 +137,24 @@ public class ModbusTest {
                 .build();
         ModbusRobotService kwModbusServers = modbus.create(ModbusRobotService.class);
 
-        List<ModbusMedicine> list = new ArrayList<>();
-        list.add(new ModbusMedicine("大黄"));
-        list.add(new ModbusMedicine("枇杷叶"));
-        list.add(new ModbusMedicine("三七"));
-        list.add(new ModbusMedicine("西瓜"));
-        list.add(new ModbusMedicine("鸡血藤"));
+//        List<ModbusMedicine> list = new ArrayList<>();
+//        list.add(new ModbusMedicine("大黄"));
+//        list.add(new ModbusMedicine("枇杷叶"));
+//        list.add(new ModbusMedicine("三七"));
+//        list.add(new ModbusMedicine("西瓜"));
+//        list.add(new ModbusMedicine("鸡血藤"));
+//
+//        Call<Void> voidCall = kwModbusServers.putMedicineList(list);
+//        Response<Void> execute1 = voidCall.execute();
+//
+//        Call<List<ModbusMedicine>> call = kwModbusServers.getMedicineList();
+//        Response<List<ModbusMedicine>> execute = call.execute();
+//        List<ModbusMedicine> body = execute.body();
 
-        Call<Void> voidCall = kwModbusServers.putMedicineList(list);
-        Response<Void> execute1 = voidCall.execute();
+//        ModbusStatus modbusStatus = kwModbusServers.getKwStatus().execute().body();
+//        System.out.println(modbusStatus);
 
-        Call<List<ModbusMedicine>> call = kwModbusServers.getMedicineList();
-        Response<List<ModbusMedicine>> execute = call.execute();
-        List<ModbusMedicine> body = execute.body();
-
-        ModbusStatus modbusStatus = kwModbusServers.getKwStatus().execute().body();
-        System.out.println(modbusStatus);
-
-        System.out.println(body);
-        Assert.assertEquals(body, list);
+        Call<Void> voidCall1 = kwModbusServers.putSendStatus((short) 1);
+        voidCall1.execute();
     }
 }

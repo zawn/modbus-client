@@ -452,9 +452,9 @@ public final class Retrofit {
      * <p>
      */
     public Retrofit build() {
-      if (baseUrl == null) {
-        throw new IllegalStateException("Base URL required.");
-      }
+//      if (baseUrl == null) {
+//        throw new IllegalStateException("Base URL required.");
+//      }
 
       Executor callbackExecutor = this.callbackExecutor;
       if (callbackExecutor == null) {
